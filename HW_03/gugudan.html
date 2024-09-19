@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <title>FastAPI Home Page</title>
+</head>
+<body>
+    <h2>구구단 출력하기</h2>
+    <form id="form_id" action="javascript:post_query()">
+        <label for="dan">단 :</label>
+        <input type="text" id="dan" name="dan">
+        <button type="submit">출력</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        function post_query() {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:8000/gugudan",
+                data: $("#form_id").serialize(),
+                success: update_result,
+                dataType: "json"
+            });
+        }
+
+        function update_result(data) {
+            let resultsHtml = "<ul>";
+            data.구구단.forEach(function (item) {
+                resultsHtml += "<li>" + item + "</li>";
+            });
+            resultsHtml += "</ul>";
+
+            $("#results").html(resultsHtml);
+        }
+    </script>
+</body>
+</html>
