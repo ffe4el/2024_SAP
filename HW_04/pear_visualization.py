@@ -85,7 +85,6 @@ def dataframe_load(loc, year1, year2, month, day):
     return filtered_df
 
 
-# 함수로 변환한 코드
 def calculate_blossom_date_CD(df, Tc=5.4, Hr=272):
     """
     Tc와 Hr 값을 이용하여 누적 cd 값이 Hr 이상이 되는 첫 번째 시점의 날짜를 계산하는 함수.
