@@ -1,0 +1,36 @@
+name: Run Python Script Daily
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # 2시간 마다 실행
+
+jobs:
+  run-python-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run Python script
+      run: |
+        python get_data.py
+        env:
+                MY_GITHUB_TOKEN: ${{ secrets.SOLA_GITHUB_TOKEN }}
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name "SOLA"
+        git add ./weather_data/*.csv
+        git commit -m "Update Weather Data - $(TZ='Asia/Seoul' date +'%Y-%m-%d')"
+        git push
