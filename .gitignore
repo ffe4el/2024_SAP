@@ -15,6 +15,6 @@ env/
 venv/
 
 # Streamlit secrets 파일
-.streamlit/secrets.toml
-/.streamlit
+HW_08/.streamlit/secrets.toml
+/HW_08/.streamlit
 *.toml
