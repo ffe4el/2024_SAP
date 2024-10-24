@@ -292,7 +292,7 @@ elif menu == "📊 데이터 시각화":
         if data['GDD'].iloc[-1] >= gdd_threshold:
             warning_message = f"⚠️ {crop}의 누적 GDD가 {gdd_threshold}℃에 도달했습니다. 작물 관리를 시작하세요!"
             st.warning(warning_message)
-            send_telegram_message(warning_message, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+            send_telegram_message(warning_message)
 
         start_date = st.sidebar.date_input("시작 날짜", value=data.index.min().date())
         end_date = st.sidebar.date_input("종료 날짜", value=data.index.max().date())
