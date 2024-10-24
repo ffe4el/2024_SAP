@@ -9,9 +9,9 @@ import requests
 
 # 텔레그램 알림 함수
 def send_telegram_message(message):
-    # 환경 변수에서 텔레그램 봇 토큰과 챗 ID를 가져옵니다.
-    bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-    chat_id = os.getenv('TELEGRAM_CHAT_ID')
+    # Streamlit secrets에서 봇 토큰과 챗 ID를 가져옴
+    bot_token = st.secrets["telegram"]["bot_token"]
+    chat_id = st.secrets["telegram"]["chat_id"]
 
     if bot_token and chat_id:
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
