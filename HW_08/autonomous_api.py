@@ -3,6 +3,20 @@ import pandas as pd
 from datetime import datetime
 import os
 import plotly.graph_objects as go
+import requests
+
+
+
+# 텔레그램 알림 함수
+def send_telegram_message(message, bot_token, chat_id):
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    params = {"chat_id": chat_id, "text": message}
+    response = requests.post(url, params=params)
+    return response
+
+# 텔레그램 봇 정보 (토큰과 채팅 ID를 추가)
+TELEGRAM_BOT_TOKEN = '7223152057:AAEwXLC7TbW-HPV5jt9wTJyXmvm2MabCC_c'  # 텔레그램 봇 토큰
+TELEGRAM_CHAT_ID = '8182154102'  # 채팅 ID
 
 # 특정 연도의 CSV 파일을 weather_data 디렉토리에서 모두 읽는 함수
 def load_csv_files_for_year(year):
@@ -184,7 +198,7 @@ if menu == "📘 사용법 안내":
     <h5>GDD, DLI, VPD 계산법</h5>
     <p>데이터 시각화에서 아래의 항목을 추가로 계산하여 분석할 수 있습니다:</p>
     <ul>
-        <li><b>GDD (Growing Degree Days)</b>: GDD는 작물 성장에 유리한 온도를 기반으로 하는 지표입니다.</li>
+        <li><b>GDD (Growing Degree Days)</b>: GDD는 작물 성장에 유리한 온도를 기반으로 하는 지표입니다. </li>
         <p><b>공식</b>: (일최고기온 + 일최저기온) / 2 - 기준온도</p>
         <li><b>DLI (Daily Light Integral)</b>: DLI는 하루 동안 작물이 받은 총 광량을 나타냅니다.</li>
         <p><b>공식</b>: 일일광량(μmol/m²/s) × 3600 × 일광시간(시간) / 1,000,000</p>
@@ -192,12 +206,20 @@ if menu == "📘 사용법 안내":
         <p><b>공식</b>: (1 - 상대습도/100) × 0.6108 × exp((17.27 × 온도) / (온도 + 237.3))</p>
     </ul>
     <p>이 데이터를 활용하여 작물 성장에 필요한 기상 데이터를 분석할 수 있습니다.</p>
+    
+    <이번 과제에서 가정>
+    <ul>
+        <li>GDD 누적 온도는 편의상 9월1일부터 누적 시킵니다. </li>
+        <li>청경채의 생육적온 : 20~25℃, GDD 기준 온도(생육 한계 온도) : 4.4 ℃, GDD 가 400 ℃ 누적되었을때 수확 적정 시기</li>
+        <li>고랭지배추의 생육적온 : 15~20℃, GDD 기준 온도(생육 한계 온도) : 5.0 ℃, GDD 가 900 ℃ 누적되었을때 수확 적정 시기</li>
+    </ul>    
+
     </div>
     """, unsafe_allow_html=True)
 
 if menu == "📂 CSV 파일 관리":
     st.header("📂 CSV 파일 관리")
-    year = st.number_input("확인할 연도를 입력하세요", min_value=2000, max_value=datetime.now().year, step=1)
+    year = st.number_input("확인할 연도를 입력하세요", min_value=2024, max_value=datetime.now().year, step=1)
 
     # 해당 연도의 CSV 파일 읽기
     if year:
@@ -218,13 +240,20 @@ elif menu == "📊 데이터 시각화":
     else:
         data = st.session_state["data"]  # session_state에서 데이터 가져오기
 
+        # 작물 선택 메뉴 추가
+        crop = st.sidebar.selectbox("작물을 선택하세요:", ["청경채", "고랭지배추"])
+
         avg_option = st.sidebar.selectbox("데이터 집계 단위를 선택하세요:", ["원본 데이터(1분 간격)", "10분 평균", "1시간 평균", "하루 평균"])
 
-        # 하루 평균을 선택했을 때만 기준 온도 입력란이 보이도록 설정
-        if avg_option == "하루 평균":
-            base_temp = st.sidebar.number_input("GDD 계산을 위한 기준 온도를 입력하세요 (°C)", value=10)
-        else:
-            base_temp = None
+        # 작물에 따른 GDD 기준 온도 및 알림 기준 설정
+        if crop == "청경채":
+            base_temp = 4.4
+        elif crop == "고랭지배추":
+            base_temp = 5.0
+
+        # 사용자가 GDD 임계값을 지정할 수 있도록 추가
+        gdd_threshold = st.sidebar.number_input(f"{crop}의 GDD 경고 임계값을 설정하세요 (청경채: 400℃, 고랭지배추: 900℃)", min_value=0, max_value=10000,
+                                                    step=100)
 
         if avg_option == "10분 평균":
             data = data.resample('10T').mean().dropna()
@@ -249,10 +278,14 @@ elif menu == "📊 데이터 시각화":
         # VPD 및 DLI는 모든 데이터 집계 단위에서 사용 가능
         data['VPD'] = data.apply(lambda row: calculate_vpd(row['temp'], row['humid']), axis=1)
 
-        # GDD 및 DLI는 하루 평균에서만 계산
-        if avg_option == "하루 평균":
-            data['DLI'] = data.apply(lambda row: calculate_dli(row['radn']), axis=1)
-            data['GDD'] = data.apply(lambda row: calculate_gdd(row['temp'], row['temp'], base_temp), axis=1).cumsum()
+        # GDD는 하루 평균에서만 계산
+        data['GDD'] = data.apply(lambda row: calculate_gdd(row['temp'], row['temp'], base_temp), axis=1).cumsum()
+
+        # GDD 기준 도달 시 경고 알림 및 텔레그램 메시지 전송
+        if data['GDD'].iloc[-1] >= gdd_threshold:
+            warning_message = f"⚠️ {crop}의 누적 GDD가 {gdd_threshold}℃에 도달했습니다. 작물 관리를 시작하세요!"
+            st.warning(warning_message)
+            send_telegram_message(warning_message, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
 
         start_date = st.sidebar.date_input("시작 날짜", value=data.index.min().date())
         end_date = st.sidebar.date_input("종료 날짜", value=data.index.max().date())
@@ -288,6 +321,32 @@ elif menu == "📊 데이터 시각화":
             elif selected_traces == 2:
                 second_axis_name = "온도(℃)"
             fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data['temp'], mode='lines', name="온도(℃)", yaxis=yaxis))
+
+            # 작물에 따른 생육 적온 구간을 강조 (색칠)
+            if crop == "청경채":
+                # 청경채: 20-25도 구간을 색칠
+                fig.add_shape(
+                    type="rect",
+                    xref="paper", yref="y",
+                    x0=0, x1=1,  # x 축을 전체 범위로 설정
+                    y0=20, y1=25,  # 청경채 생육 적온
+                    fillcolor="LightGreen",  # 구간 색상
+                    opacity=0.3,  # 투명도 설정
+                    layer="below",  # 라인 아래에 색칠
+                    line_width=0  # 선 없애기
+                )
+            elif crop == "고랭지배추":
+                # 고랭지배추: 15-20도 구간을 색칠
+                fig.add_shape(
+                    type="rect",
+                    xref="paper", yref="y",
+                    x0=0, x1=1,  # x 축을 전체 범위로 설정
+                    y0=15, y1=20,  # 고랭지배추 생육 적온
+                    fillcolor="LightBlue",  # 구간 색상
+                    opacity=0.3,  # 투명도 설정
+                    layer="below",  # 라인 아래에 색칠
+                    line_width=0  # 선 없애기
+                )
 
             if avg_option == "하루 평균":
                 st.write(f"### 온도 통계")
@@ -330,7 +389,13 @@ elif menu == "📊 데이터 시각화":
 
         if gdd_checked and 'GDD' in data.columns:
             selected_traces += 1
-            fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data['GDD'], mode='lines', name="GDD (°C)"))
+            yaxis = "y1" if selected_traces == 1 else "y2"
+            if selected_traces == 1:
+                first_axis_name = "GDD (°C)"
+            elif selected_traces == 2:
+                second_axis_name = "GDD (°C)"
+            fig.add_trace(
+                go.Scatter(x=filtered_data.index, y=filtered_data['GDD'], mode='lines', name="GDD (°C)", yaxis=yaxis))
 
         if dli_checked and 'DLI' in data.columns:
             selected_traces += 1
