@@ -8,15 +8,22 @@ import requests
 
 
 # 텔레그램 알림 함수
-def send_telegram_message(message, bot_token, chat_id):
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    params = {"chat_id": chat_id, "text": message}
-    response = requests.post(url, params=params)
-    return response
+def send_telegram_message(message):
+    # 환경 변수에서 텔레그램 봇 토큰과 챗 ID를 가져옵니다.
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+    chat_id = os.getenv('TELEGRAM_CHAT_ID')
 
-# 텔레그램 봇 정보 (토큰과 채팅 ID를 추가)
-TELEGRAM_BOT_TOKEN = '7223152057:AAEwXLC7TbW-HPV5jt9wTJyXmvm2MabCC_c'  # 텔레그램 봇 토큰
-TELEGRAM_CHAT_ID = '8182154102'  # 채팅 ID
+    if bot_token and chat_id:
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        params = {"chat_id": chat_id, "text": message}
+        response = requests.post(url, params=params)
+        if response.status_code == 200:
+            print("텔레그램 메시지가 성공적으로 전송되었습니다.")
+        else:
+            print(f"텔레그램 메시지 전송 실패: {response.status_code}")
+    else:
+        print("텔레그램 봇 토큰 또는 챗 ID가 설정되지 않았습니다.")
+
 
 # 특정 연도의 CSV 파일을 weather_data 디렉토리에서 모두 읽는 함수
 def load_csv_files_for_year(year):
