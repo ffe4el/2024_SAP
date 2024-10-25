@@ -2,7 +2,7 @@ name: Run Python Script Daily
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # 2시간 마다 실행
+    - cron: '*/10 * * * *'  # 2시간 마다 실행
 
 jobs:
   run-python-script:

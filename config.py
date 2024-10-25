@@ -1,0 +1,1 @@
+GDATA_API_KEY = "TEo5fURVg6O3ChvfXOmzkr0IXbTl0d4VkfIj3JVTz0ctJ+NS0IjPHxLXlijxDlubeXvzd3ZlGksTn/HhACp8gA=="

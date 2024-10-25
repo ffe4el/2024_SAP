@@ -1,10 +1,12 @@
 from flask import Flask, render_template, jsonify, request
 import requests
+from config import GDATA_API_KEY  # config 파일에서 API 키 가져오기
 
 app = Flask(__name__)
 
-# 공공데이터 포탈 api key
-API_KEY = "TEo5fURVg6O3ChvfXOmzkr0IXbTl0d4VkfIj3JVTz0ctJ+NS0IjPHxLXlijxDlubeXvzd3ZlGksTn/HhACp8gA=="
+
+# 공공데이터 포탈 API 키
+API_KEY = GDATA_API_KEY  # config.py에서 API 키 가져오기
 
 
 @app.route('/')
