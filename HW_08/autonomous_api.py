@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 import requests
 
 
-
 # 텔레그램 알림 함수
 def send_telegram_message(message):
     # Streamlit secrets에서 봇 토큰과 챗 ID를 가져옴
