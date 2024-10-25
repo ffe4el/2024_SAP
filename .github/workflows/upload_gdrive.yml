@@ -1,0 +1,30 @@
+name: Upload Weather Data to Google Drive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # 매 10분마다 실행
+
+jobs:
+  upload-to-gdrive:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.x"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
+    - name: Decode Google Drive credentials and save
+      run: |
+        echo "${{ secrets.GDRIVE_CREDENTIALS }}" | base64 --decode > credentials.json
+
+    - name: Run upload script
+      run: python HW_08/upload_to_gdrive.py

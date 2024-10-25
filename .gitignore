@@ -21,3 +21,6 @@ HW_08/.streamlit/secrets.toml
 
 # 짜잘한 API Key 모아둠
 config.py
+# 구글 드라이브 클라이언트 아이디
+credentials.json
+credentials_base64.txt
