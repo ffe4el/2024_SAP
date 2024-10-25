@@ -31,6 +31,6 @@ jobs:
     - name: Commit and push changes
       run: |
         git config --global user.name "ffe4el"
-        git add HW_08/weather_data/*.csv  # 상대 경로로 수정
+        git add HW_08/weather_data/*  # 상대 경로로 수정
         git commit -m "Update Weather Data - $(TZ='Asia/Seoul' date +'%Y-%m-%d')"
         git push
