@@ -20,9 +20,17 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pydrive2 pandas requests  # 필요한 패키지 설치
+        if [ -f HW_08/requirements.txt ]; then pip install -r HW_08/requirements.txt; fi
 
     - name: Run Python script
-      run: python HW_08/upload_to_gdrive.py
+      run: |
+        python HW_08/get_data.py  # 상대 경로로 수정
       env:
-        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+        MY_GITHUB_TOKEN: ${{ secrets.SOLA_GITHUB_TOKEN }}
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name "SOLA"
+        git add HW_08/weather_data/*.csv  # 상대 경로로 수정
+        git commit -m "Update Weather Data - $(TZ='Asia/Seoul' date +'%Y-%m-%d')"
+        git push
