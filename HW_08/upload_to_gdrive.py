@@ -10,7 +10,9 @@ import requests
 # Google Drive 인증 설정
 def authenticate_gdrive():
     gauth = GoogleAuth()
-    gauth.credentials = json.loads(os.environ["GDRIVE_CREDENTIALS"])  # GitHub Secrets에서 credentials.json 불러오기
+    # 환경 변수에서 Google Drive 인증 정보 로드
+    creds_dict = json.loads(os.environ["GDRIVE_CREDENTIALS"])
+    gauth.credentials = gauth.service_account_credentials_from_dict(creds_dict)
     drive = GoogleDrive(gauth)
     return drive
 
@@ -58,7 +60,7 @@ def main():
     weather_data.to_csv(file_path, index=False)
 
     # Google Drive에 업로드
-    upload_to_gdrive(file_path, drive)
+    upload_to_gdrive(file_path, drive, folder_id="1vSqClGRZev6VgkRf_2Kdpd_fJEvpPj5p")
 
 if __name__ == '__main__':
     main()
