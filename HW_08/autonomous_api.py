@@ -4,6 +4,26 @@ from datetime import datetime
 import os
 import plotly.graph_objects as go
 import requests
+import gdown
+
+# Google Drive에서 데이터 다운로드 함수
+def download_data_from_gdrive(file_id):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    output = 'weather_data.csv'  # 다운로드될 파일명
+    gdown.download(url, output, quiet=False)
+    return output
+
+# Google Drive에서 파일 다운로드 및 데이터 로드 함수
+def load_data_from_gdrive(file_id):
+    file_path = download_data_from_gdrive(file_id)
+    if os.path.exists(file_path):
+        data = pd.read_csv(file_path)
+        data['timestamp'] = pd.to_datetime(data['timestamp'])
+        data = data.set_index('timestamp')
+        return data
+    else:
+        st.error("Google Drive에서 데이터를 다운로드하는 데 실패했습니다.")
+        return None
 
 
 # 텔레그램 알림 함수
@@ -24,36 +44,36 @@ def send_telegram_message(message):
         print("텔레그램 봇 토큰 또는 챗 ID가 설정되지 않았습니다.")
 
 
-# 특정 연도의 CSV 파일을 weather_data 디렉토리에서 모두 읽는 함수
-def load_csv_files_for_year(year):
-    directory = './weather_data/'  # CSV 파일이 저장된 디렉토리
-    data_frames = []
-    months = set()  # 월을 저장할 집합
+# # 특정 연도의 CSV 파일을 weather_data 디렉토리에서 모두 읽는 함수
+# def load_csv_files_for_year(year):
+#     directory = './weather_data/'  # CSV 파일이 저장된 디렉토리
+#     data_frames = []
+#     months = set()  # 월을 저장할 집합
+#
+#     # 디렉토리에서 파일 리스트 확인
+#     for filename in os.listdir(directory):
+#         if filename.endswith(".csv") and filename.startswith(f"{year}_"):
+#             file_path = os.path.join(directory, filename)
+#             df = pd.read_csv(file_path)
+#             df.columns = df.columns.str.lower().str.strip()  # 열 이름을 소문자 및 공백 제거
+#             if 'timestamp' not in df.columns:
+#                 st.error(f"{filename} 파일에 'Timestamp' 열이 없습니다. 올바른 형식의 CSV 파일을 확인해주세요.")
+#                 st.stop()
+#             df['timestamp'] = pd.to_datetime(df['timestamp'])  # Timestamp 열을 datetime으로 변환
+#             data_frames.append(df)
+#
+#             # 파일명에서 월 추출 (예: '2024_09.csv'에서 '09' 추출)
+#             month = filename.split('_')[1].split('.')[0]
+#             months.add(month)
 
-    # 디렉토리에서 파일 리스트 확인
-    for filename in os.listdir(directory):
-        if filename.endswith(".csv") and filename.startswith(f"{year}_"):
-            file_path = os.path.join(directory, filename)
-            df = pd.read_csv(file_path)
-            df.columns = df.columns.str.lower().str.strip()  # 열 이름을 소문자 및 공백 제거
-            if 'timestamp' not in df.columns:
-                st.error(f"{filename} 파일에 'Timestamp' 열이 없습니다. 올바른 형식의 CSV 파일을 확인해주세요.")
-                st.stop()
-            df['timestamp'] = pd.to_datetime(df['timestamp'])  # Timestamp 열을 datetime으로 변환
-            data_frames.append(df)
-
-            # 파일명에서 월 추출 (예: '2024_09.csv'에서 '09' 추출)
-            month = filename.split('_')[1].split('.')[0]
-            months.add(month)
-
-    if data_frames:
-        # 모든 데이터프레임을 병합
-        data = pd.concat(data_frames)
-        data = data.sort_values(by='timestamp')  # Timestamp 기준으로 정렬
-        data = data.set_index('timestamp')  # Timestamp를 인덱스로 설정
-        return data, sorted(months)  # 데이터를 리턴할 때 월도 함께 리턴
-    else:
-        return None, None
+    # if data_frames:
+    #     # 모든 데이터프레임을 병합
+    #     data = pd.concat(data_frames)
+    #     data = data.sort_values(by='timestamp')  # Timestamp 기준으로 정렬
+    #     data = data.set_index('timestamp')  # Timestamp를 인덱스로 설정
+    #     return data, sorted(months)  # 데이터를 리턴할 때 월도 함께 리턴
+    # else:
+    #     return None, None
 
 # 초기 화면 구성
 st.title("전주 기상데이터 대시보드 🌱")
@@ -223,21 +243,19 @@ if menu == "📘 사용법 안내":
     </div>
     """, unsafe_allow_html=True)
 
-if menu == "📂 CSV 파일 관리":
+elif menu == "📂 CSV 파일 관리":
     st.header("📂 CSV 파일 관리")
-    year = st.number_input("확인할 연도를 입력하세요", min_value=2024, max_value=datetime.now().year, step=1)
+    file_id = st.text_input("Google Drive의 파일 ID를 입력하세요")
 
-    # 해당 연도의 CSV 파일 읽기
-    if year:
-        data, months = load_csv_files_for_year(year)
+    if file_id:
+        data = load_data_from_gdrive(file_id)
         if data is not None:
             st.session_state["data"] = data  # 데이터를 session_state에 저장
-            months_str = ', '.join(months)  # 월들을 문자열로 변환
-            st.write(f"{year}년의 {months_str}월 데이터가 성공적으로 업로드되었습니다. '데이터 시각화' 메뉴에서 데이터를 확인하세요.")
+            st.write("데이터가 성공적으로 불러와졌습니다. '데이터 시각화' 메뉴에서 확인하세요.")
         else:
-            st.write(f"{year}년의 데이터를 찾을 수 없습니다.")
+            st.write("데이터를 불러올 수 없습니다. Google Drive 파일 ID를 확인하세요.")
     else:
-        st.write("연도를 입력하세요.")
+        st.write("파일 ID를 입력하세요.")
 
 elif menu == "📊 데이터 시각화":
     st.header("📊 데이터 시각화")
