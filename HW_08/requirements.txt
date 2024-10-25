@@ -3,7 +3,7 @@ attrs==24.2.0
 blinker==1.8.2
 branca==0.8.0
 cachetools==5.5.0
-certifi @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_c7dh9wvd8f/croot/certifi_1725551679893/work/certifi
+certifi==2024.8.30
 charset-normalizer==3.4.0
 click==8.1.7
 contourpy==1.1.1
