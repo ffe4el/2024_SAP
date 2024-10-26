@@ -2,7 +2,7 @@ name: Upload Weather Data to Google Drive
 
 on:
   schedule:
-    - cron: "*/10 * * * *"  # 매 10분마다 실행
+    - cron: "0 0 * * *"  # 매 10분마다 실행
 
 jobs:
   upload-to-gdrive:
