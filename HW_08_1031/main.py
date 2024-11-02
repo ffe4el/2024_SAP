@@ -62,13 +62,13 @@ from datetime import datetime, timedelta
 from sections import dashboard_explanation, csv_management, data_visualization, data_download
 from utils.fetch_data import fetch_thingspeak_data
 
-# CSS 파일 불러오기
-def load_css(file_path):
-    with open(file_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-# 메인 CSS 로드
-load_css("css/style.css")
+# # CSS 파일 불러오기
+# def load_css(file_path):
+#     with open(file_path) as f:
+#         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+#
+# # 메인 CSS 로드
+# load_css("css/style.css")
 
 # 데이터 업데이트 함수
 def update_data():
