@@ -106,10 +106,10 @@ def plot_daily_cumulative_biomass(data, area):
     st.write("### 일별 누적 생체중 변화량 (kg):")
     fig, ax = plt.subplots()
     daily_cumulative.plot(kind='bar', ax=ax, color='skyblue')
-    ax.set_title("일별 누적 생체중 변화량")
-    ax.set_xlabel("날짜")
-    ax.set_ylabel("누적 생체중 (kg/m²)")
-    ax.set_xticks(range(0, len(daily_cumulative), max(1, len(daily_cumulative) // 10)))  # x축 레이블 간격 조정
+    ax.set_title("Daily Cumulative Biomass Change")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Cumulative Biomass (kg/m²)")
+    ax.set_xticks(range(0, len(daily_cumulative), max(1, len(daily_cumulative) // 10)))  # Adjust x-axis tick spacing
     ax.set_xticklabels([str(x) for x in daily_cumulative.index[::max(1, len(daily_cumulative) // 10)]], rotation=45)
     st.pyplot(fig)
 
