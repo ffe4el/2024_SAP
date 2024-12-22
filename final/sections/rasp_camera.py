@@ -1,8 +1,8 @@
 import streamlit as st
-import requests
+import cv2
 from PIL import Image
 from io import BytesIO
-
+import numpy as np
 
 def show():
     # Streamlit 페이지 제목
@@ -22,27 +22,30 @@ def show():
 
     # 사진 찍기 버튼
     if st.button("📸 사진 찍기"):
-        # 스트림 URL에서 현재 프레임 캡처
         try:
-            response = requests.get(stream_url, stream=True)
-            response.raise_for_status()  # 요청 상태 확인
+            # OpenCV를 사용해 스트림에서 프레임 캡처
+            cap = cv2.VideoCapture(stream_url)
+            ret, frame = cap.read()  # 첫 번째 프레임 읽기
 
-            # 이미지 데이터를 읽어서 PIL Image로 변환
-            img_bytes = BytesIO(response.content)
-            captured_image = Image.open(img_bytes)
+            if ret:
+                # OpenCV 이미지(Numpy 배열)를 PIL 이미지로 변환
+                captured_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-            # 캡처된 이미지 표시
-            st.image(captured_image, caption="캡처된 이미지", use_column_width=True)
+                # 캡처된 이미지 표시
+                st.image(captured_image, caption="캡처된 이미지", use_column_width=True)
 
-            # 이미지 다운로드 버튼
-            buf = BytesIO()
-            captured_image.save(buf, format="JPEG")
-            buf.seek(0)
-            st.download_button(
-                label="⬇️ 이미지 다운로드",
-                data=buf,
-                file_name="captured_image.jpg",
-                mime="image/jpeg"
-            )
+                # 이미지 다운로드 버튼
+                buf = BytesIO()
+                captured_image.save(buf, format="JPEG")
+                buf.seek(0)
+                st.download_button(
+                    label="⬇️ 이미지 다운로드",
+                    data=buf,
+                    file_name="captured_image.jpg",
+                    mime="image/jpeg"
+                )
+            else:
+                st.error("스트림에서 프레임을 읽을 수 없습니다.")
+            cap.release()  # 스트림 해제
         except Exception as e:
             st.error(f"이미지 캡처 중 오류 발생: {e}")

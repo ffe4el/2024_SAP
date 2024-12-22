@@ -123,9 +123,6 @@ def plot_daily_cumulative_biomass(data, area):
     display_summary(data, area, total_production, total_income)
 
 
-# 결과 요약 출력 함수
-
-
 # Streamlit UI
 def show():
     st.title("베타함수 기반 작물 생육 모델")
